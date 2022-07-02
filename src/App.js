@@ -1,23 +1,45 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useState } from "react";
+import { MainPage } from "./components/MainPage";
+import { SearchForm } from "./components/SearchForm";
+import { handleResponseWeather, makeResponseForecast } from "./Server.js";
+import "./styles/App.css";
+import "./styles/tabs.css";
+import { ViewModeContext } from "./context";
 
 function App() {
+  const [data, setData] = useState("");
+  const [city, setCity] = useState("Bali");
+  const [viewMode, setViewMode] = useState("now");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (viewMode == "forecast") {
+        const data = await makeResponseForecast(city);
+        setData(data);
+      } else {
+        const data = await handleResponseWeather(city);
+        setData(data);
+      }
+    };
+
+    fetchData();
+  }, [city, viewMode]);
+
+  function handleResponse(cityName) {
+    setCity(cityName);
+  }
+
+  function handleViewMode(mode) {
+    setData("");
+    setViewMode(mode);
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="wrapper">
+      <ViewModeContext.Provider value={{ viewMode, handleViewMode }}>
+        <SearchForm handleResponse={handleResponse} data={data} />
+        <MainPage data={data} handleResponse={handleResponse} />
+      </ViewModeContext.Provider>
     </div>
   );
 }
